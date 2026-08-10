@@ -386,7 +386,7 @@ class LiveText(NVDAObject):
 	def initOverlayClass(self):
 		self._event = threading.Event()
 		self._monitorThread = None
-		self._keepMonitoring = False
+		self._monitorStopEvent = None
 
 	def startMonitoring(self):
 		"""Start monitoring for new text.
@@ -396,12 +396,13 @@ class LiveText(NVDAObject):
 		"""
 		if self._monitorThread:
 			return
+		stopEvent = self._monitorStopEvent = threading.Event()
 		thread = self._monitorThread = threading.Thread(
 			name=f"{self.__class__.__qualname__}._monitorThread",
 			target=self._monitor,
+			args=(stopEvent,),
 			daemon=True,
 		)
-		self._keepMonitoring = True
 		self._event.clear()
 		thread.start()
 
@@ -412,9 +413,10 @@ class LiveText(NVDAObject):
 		"""
 		if not self._monitorThread:
 			return
-		self._keepMonitoring = False
+		self._monitorStopEvent.set()
 		self._event.set()
 		self._monitorThread = None
+		self._monitorStopEvent = None
 
 	def event_textChange(self):
 		"""Fired when the text changes.
@@ -464,21 +466,21 @@ class LiveText(NVDAObject):
 		"""Report a line of new text."""
 		speech.speakText(line)
 
-	def _monitor(self):
+	def _monitor(self, stopEvent: threading.Event):
 		try:
 			oldText = self._getText()
 		except:  # noqa: E722
 			log.exception("Error getting initial text")
 			oldText = ""
 
-		while self._keepMonitoring:
+		while not stopEvent.is_set():
 			self._event.wait()
-			if not self._keepMonitoring:
+			if stopEvent.is_set():
 				break
 			if self.STABILIZE_DELAY > 0:
 				# wait for the text to stabilise.
 				time.sleep(self.STABILIZE_DELAY)
-				if not self._keepMonitoring:
+				if stopEvent.is_set():
 					# Monitoring was stopped while waiting for the text to stabilise.
 					break
 			self._event.clear()

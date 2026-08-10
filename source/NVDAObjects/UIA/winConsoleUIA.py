@@ -455,6 +455,18 @@ class _DiffBasedWinTerminalUIA(EnhancedTermTypedCharSupport):
 	new text.
 	"""
 
+	#: Keep automatic output monitoring bounded. Reading and diffing the full
+	#: Windows Terminal scrollback can otherwise block for seconds after a long
+	#: session. This only affects live output detection; review commands still
+	#: use the complete terminal text.
+	_liveTextMaxLines = 200
+
+	def _getText(self) -> str:
+		textInfo = self.makeTextInfo(textInfos.POSITION_ALL)
+		textInfo.collapse(end=True)
+		textInfo.move(textInfos.UNIT_LINE, -self._liveTextMaxLines, endPoint="start")
+		return self.diffAlgo._getText(textInfo)
+
 	def event_UIA_notification(self, **kwargs):
 		"Block notification events when diffing to prevent double reporting."
 		log.debugWarning(f"Notification event blocked to avoid double-report: {kwargs}")
