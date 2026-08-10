@@ -25,10 +25,10 @@ http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 /// @return the vector of ints.
 std::vector<int> SafeArrayToVector(SAFEARRAY* pSafeArray);
 
-/// @brief Fetches the runtimeID from a given uI Automation element.
+/// @brief Fetches the cached runtime ID from a UI Automation element.
 /// @param pElement the UI Automation element whose runtime ID should be fetched.
-/// @return the runtime ID from the element.
-std::vector<int> getRuntimeIDFromElement(IUIAutomationElement* pElement);
+/// @return the cached runtime ID, or an empty vector when unavailable.
+std::vector<int> getCachedRuntimeIDFromElement(IUIAutomationElement* pElement);
 
 // @brief a helper template function for the supports_alternative concept.
 template <typename T, typename V, std::size_t... indexes>

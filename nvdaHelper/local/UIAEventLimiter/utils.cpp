@@ -14,6 +14,7 @@ http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
 #include <vector>
 #include <UIAutomation.h>
+#include <atlcomcli.h>
 #include <comutil.h>
 #include "utils.h"
 
@@ -31,13 +32,11 @@ std::vector<int> SafeArrayToVector(SAFEARRAY* pSafeArray) {
 	return vec;
 }
 
-std::vector<int> getRuntimeIDFromElement(IUIAutomationElement* pElement) {
-	SAFEARRAY* runtimeIdArray;
-	HRESULT hr = pElement->GetRuntimeId(&runtimeIdArray);
-	if (FAILED(hr)) {
+std::vector<int> getCachedRuntimeIDFromElement(IUIAutomationElement* pElement) {
+	CComVariant runtimeId;
+	HRESULT hr = pElement->GetCachedPropertyValue(UIA_RuntimeIdPropertyId, &runtimeId);
+	if (FAILED(hr) || runtimeId.vt != (VT_ARRAY | VT_I4) || !runtimeId.parray) {
 		return {};
 	}
-	std::vector<int> runtimeID = SafeArrayToVector(runtimeIdArray);
-	SafeArrayDestroy(runtimeIdArray);
-	return runtimeID;
+	return SafeArrayToVector(runtimeId.parray);
 }

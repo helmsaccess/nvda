@@ -21,6 +21,7 @@ http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 #include <functional>
 #include <mutex>
 #include <atomic>
+#include <utility>
 #include <atlcomcli.h>
 #include <comutil.h>
 #include <common/log.h>
@@ -30,17 +31,18 @@ http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 template<EventRecordConstraints EventRecordClass, typename... EventRecordArgTypes>
 HRESULT RateLimitedEventHandler::queueEvent(EventRecordArgTypes&&... args) {
 	LOG_DEBUG(L"RateLimitedUIAEventHandler::queueEvent called");
+	EventRecordVariant_t recordVar(
+		std::in_place_type_t<EventRecordClass>{},
+		std::forward<EventRecordArgTypes>(args)...
+	);
+	auto coalescingKey = std::get<EventRecordClass>(recordVar).generateCoalescingKey();
 	bool needsFlush = false;
 	{ // scoped lock
 		std::lock_guard lock(m_mtx);
 		// work out whether we need to request a flush after inserting this event.
 		needsFlush = m_eventRecords.empty();
 		LOG_DEBUG(L"RateLimitedUIAEventHandler::queueEvent: Inserting new event");
-		auto& recordVar = m_eventRecords.emplace_back(std::in_place_type_t<EventRecordClass>{}, args...);
-		auto recordVarIter = m_eventRecords.end();
-		recordVarIter--;
-		auto& record = std::get<EventRecordClass>(recordVar);
-		auto coalescingKey = record.generateCoalescingKey();
+		auto recordVarIter = m_eventRecords.insert(m_eventRecords.end(), std::move(recordVar));
 		auto existingKeyIter = m_eventRecordsByKey.find(coalescingKey);
 		if(existingKeyIter != m_eventRecordsByKey.end()) {
 			LOG_DEBUG(L"RateLimitedUIAEventHandler::queueEvent: found existing event with same key");

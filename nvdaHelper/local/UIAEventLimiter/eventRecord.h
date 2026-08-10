@@ -32,7 +32,7 @@ struct AutomationEventRecord_t {
 	CComPtr<IUIAutomationElement> sender;
 	EVENTID eventID;
 	std::vector<int> generateCoalescingKey() const {
-		auto key = getRuntimeIDFromElement(sender);
+		auto key = getCachedRuntimeIDFromElement(sender);
 		key.push_back(eventID);
 		return key;
 	}
@@ -43,7 +43,7 @@ struct PropertyChangedEventRecord_t {
 	PROPERTYID propertyID;
 	CComVariant newValue;
 	std::vector<int> generateCoalescingKey() const {
-		auto key = getRuntimeIDFromElement(sender);
+		auto key = getCachedRuntimeIDFromElement(sender);
 		key.push_back(UIA_AutomationPropertyChangedEventId);
 		key.push_back(propertyID);
 		return key;
@@ -53,7 +53,7 @@ struct PropertyChangedEventRecord_t {
 struct FocusChangedEventRecord_t {
 	CComPtr<IUIAutomationElement> sender;
 	std::vector<int> generateCoalescingKey() const {
-		auto key = getRuntimeIDFromElement(sender);
+		auto key = getCachedRuntimeIDFromElement(sender);
 		key.push_back(UIA_AutomationFocusChangedEventId);
 		return key;
 	}
@@ -66,7 +66,7 @@ struct NotificationEventRecord_t {
 	CComBSTR displayString;
 	CComBSTR activityID;
 	std::vector<int> generateCoalescingKey() const {
-		auto key = getRuntimeIDFromElement(sender);
+		auto key = getCachedRuntimeIDFromElement(sender);
 		key.push_back(UIA_NotificationEventId);
 		key.push_back(notificationKind);
 		key.push_back(notificationProcessing);
@@ -87,7 +87,7 @@ struct ActiveTextPositionChangedEventRecord_t {
 	CComPtr<IUIAutomationElement> sender;
 	CComPtr<IUIAutomationTextRange> range;
 	std::vector<int> generateCoalescingKey() const {
-		auto key = getRuntimeIDFromElement(sender);
+		auto key = getCachedRuntimeIDFromElement(sender);
 		key.push_back(UIA_ActiveTextPositionChangedEventId);
 		return key;
 	}

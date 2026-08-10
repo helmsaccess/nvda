@@ -16,6 +16,7 @@ from unittest.mock import patch
 from comtypes import COMError
 
 import winUser
+import UIAHandler
 from UIAHandler import utils
 
 
@@ -83,3 +84,11 @@ class Test_shouldSkipEventForHungWindow(TestCase):
 		with patch.object(winUser, "isHungAppWindow", side_effect=RuntimeError("boom")):
 			# A failure inside the guard itself must never escape into the COM handler.
 			self.assertFalse(utils._shouldSkipEventForHungWindow(_FakeElement(cachedHandle=1)))
+
+
+class Test_baseCacheProperties(TestCase):
+	def test_runtimeIdIsCachedForEventCoalescing(self):
+		self.assertIn(
+			UIAHandler.UIA.UIA_RuntimeIdPropertyId,
+			UIAHandler.baseCachePropertyIDs,
+		)

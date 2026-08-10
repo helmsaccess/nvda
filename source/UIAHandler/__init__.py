@@ -68,6 +68,7 @@ baseCachePropertyIDs = {
 	UIA.UIA_IsControlElementPropertyId,
 	UIA.UIA_NamePropertyId,
 	UIA.UIA_LocalizedControlTypePropertyId,
+	UIA.UIA_RuntimeIdPropertyId,
 }
 
 #: The window class name for Microsoft Word documents.
